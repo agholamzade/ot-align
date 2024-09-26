@@ -1,0 +1,87 @@
+defaults:
+  logdir: "./logdir/rotated_mnist"
+  seed: 0
+  n_angles: 7
+  train:
+    opt: "adam"
+    learning_rate: .01
+    num_epochs: 120
+    logdir: "./logdir/rotated_mnist"
+    seed: 0
+    buffer_size: 100000
+    batch_size: 2000
+    #for current encoding use n_angles < 10
+    n_angles: 7
+    beta_schedule:
+      type: "const"
+      value: 1
+
+
+
+# first network for image modality
+FN:
+  modality: "image"
+  train:
+    num_epochs: 20
+  model:
+    type: "vae"
+    latent_dim: 16
+    output_func: "sigmoid"
+    reconstruction_loss: "binary_cross_entropy"
+    kl_divergence: "kl_divergence_normal"
+    encoder:
+      type: "cnn"
+      module_type: "conv"
+      features: [256, 512]
+      kernels: [3,3,]
+      strides: [2,2]
+      padding: "SAME"
+      act: "relu"      
+    decoder:
+      type: "cnn"
+      module_type: "convT"
+      features: [512, 256, 1]
+      kernels: [3,3,3]
+      strides: [2,2,1]
+      conv_input: [7,7,512] 
+      padding: "SAME"
+      act: "relu"    
+
+SN:
+  modality: "text"
+  train:
+    learning_rate: .01
+    num_epochs: 40
+    logdir: "./logdir/rotated_mnist"
+    seed: 0
+    buffer_size: 10000
+    batch_size: 2000
+    #for current encoding use n_angles < 10
+    n_angles: 7
+    beta_schedule:
+      type: "const"
+      # init_value: 0
+      # end_value: 1
+      # n_epochs: 100
+      # transition_begin: 50
+      value: 1
+
+
+  model:
+    type: "vae"
+    latent_dim: 8
+    output_func: "softmax"
+    reconstruction_loss: "softmax_cross_entropy"
+    kl_divergence: "kl_divergence_normal"
+    encoder:
+      type: "mlp"
+      features: [16]
+      act: "relu"      
+    decoder:
+      type: "mlp"
+      features: [16, 70]
+      act: "relu"
+
+wandb:
+  project: "dot"
+  run_name: "rotated_mnist"

@@ -1,0 +1,88 @@
+defaults:
+  logdir: "./logdir/mnist_beta_vae"
+  seed: 0
+  n_angles: 1
+  train:
+    opt: "adam"
+    num_epochs: 100
+    learning_rate: .001
+    batch_size: 1000
+    beta_schedule:
+      type: "const"
+      value: 1
+
+
+# first network for image modality
+FN:
+  modality: "image"
+  train:
+    num_epochs: 120
+    beta_schedule:
+      type: "linear"
+      init_value: 1
+      end_value: 4
+      n_epochs: 80
+      transition_begin: 20
+
+
+  model:
+    type: "vae"
+    latent_dim: 10
+    output_func: "sigmoid"
+    reconstruction_loss: "binary_cross_entropy"
+    kl_divergence: "kl_divergence_normal"
+    encoder:
+      type: "cnn"
+      module_type: "conv"
+      features: [256, 512]
+      kernels: [3,3]
+      strides: [2,2]
+      padding: "SAME"
+      act: "relu"      
+    decoder:
+      type: "cnn"
+      module_type: "convT"
+      features: [512, 256, 1]
+      kernels: [3,3,3]
+      strides: [2,2,1]
+      conv_input: [7,7,512] 
+      padding: "SAME"
+      act: "relu"    
+
+SN:
+  modality: "text"
+  train:
+    learning_rate: .01
+    num_epochs: 100
+    beta_schedule:
+      type: "linear"
+      init_value: 1
+      end_value: 4
+      n_epochs: 60
+      transition_begin: 10
+
+  model:
+    type: "vae"
+    latent_dim: 5
+    output_func: "softmax"
+    reconstruction_loss: "softmax_cross_entropy"
+    kl_divergence: "kl_divergence_normal"
+    encoder:
+      type: "mlp"
+      features: [16, 8]
+      act: "relu"      
+    decoder:
+      type: "mlp"
+      features: [8 ,16, 10]
+      act: "relu"
+
+wandb:
+  project: "dot"
+  run_name: "mnist_beta_vae"
+
+morph:
+  logdir: "./logdir/mnist_beta_vae"
+  fn_n_samples: 1000
+  sn_n_samples: 1000
+  max_iter: 10000
+  eps: 0.000001
