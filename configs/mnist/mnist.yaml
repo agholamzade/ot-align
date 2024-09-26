@@ -1,0 +1,116 @@
+defaults:
+  logdir: "./logdir/mnist/"
+  seed: 0
+  n_angles: 1
+  train:
+    opt: "adam"
+    num_epochs: 100
+    learning_rate: .001
+    batch_size: 1000
+
+
+# first network for image modality
+FN:
+  modality: "image"
+  train:
+    beta_schedule:
+      type: "const"
+      value: 1
+    num_epochs: 140
+  model:
+    type: "vae"
+    latent_dim: 10
+    output_func: "sigmoid"
+    reconstruction_loss: "binary_cross_entropy"
+    kl_divergence: "kl_divergence_normal"
+    encoder:
+      type: "cnn"
+      module_type: "conv"
+      features: [256, 512]
+      kernels: [3,3]
+      strides: [2,2]
+      padding: "SAME"
+      act: "relu"      
+    decoder:
+      type: "cnn"
+      module_type: "convT"
+      features: [512, 256, 1]
+      kernels: [3,3,3]
+      strides: [2,2,1]
+      conv_input: [7,7,512] 
+      padding: "SAME"
+      act: "relu"    
+
+SN:
+  modality: "text"
+  train:
+    beta_schedule:
+      type: "const"
+      value: 1
+    learning_rate: .01
+    num_epochs: 40
+  model:
+    type: "vae"
+    latent_dim: 4
+    output_func: "softmax"
+    reconstruction_loss: "softmax_cross_entropy"
+    kl_divergence: "kl_divergence_normal"
+    encoder:
+      type: "mlp"
+      features: [8]
+      act: "relu"      
+    decoder:
+      type: "mlp"
+      features: [8, 10]
+      act: "relu"
+
+FusedN:
+  modality: "fused"
+  train:
+    batch_size: 1000
+    beta_schedule:
+      type: "linear"
+      init_value: .1
+      end_value: 1
+      n_epochs: 100
+      transition_begin: 30
+    learning_rate: .01
+    num_epochs: 200
+  model:
+    type: "fused_vae"
+    latent_dim: 7
+    reconstruction_loss: "mean_squared_error"
+    kl_divergence: "kl_divergence_normal"
+    encoder1:
+      type: "mlp"
+      features: [12,12]
+      act: "relu"      
+    decoder1:
+      type: "mlp"
+      features: [12, 12, 10]
+      act: "relu"
+    encoder2:
+      type: "mlp"
+      features: [12,12]
+      act: "relu"
+    decoder2:
+      type: "mlp"
+      features: [12, 12, 4]
+      act: "relu"
+    
+
+wandb:
+  project: "dot"
+  run_name: "mnist"
+
+morph:
+  logdir: "./logdir/mnist"
+  batch_size: 1000
+  sinkhorn:
+    max_iterations: 10000
+  gw:
+    epsilon: .01
+    max_iterations: 200
+  vf_dims : [256,256,256,256,256,256,256,256]
+  n_iters: 1000
+
